@@ -44,7 +44,8 @@ void send_register_command(int sockfd) {
     if (body == NULL) {
         cout << "Welcome to the nerd club!" << endl;
     } else {
-        cout << body;
+        json body_json = json::parse(body);
+        cout << body_json["error"] << endl;
     }
     // free allocated memory
     free(send_json);
@@ -89,7 +90,8 @@ char* send_login_command(int sockfd) {
         cout << "You managed to login! Here is a cookie for you!" << endl;
         return cookie;
     } else {
-        cout << body << endl;
+        json json_body = json::parse(body);
+        cout << json_body["error"] << endl;
         // free allocated memory
         free(send_json);
         free(body_data);
@@ -133,7 +135,11 @@ void send_get_books_command(int sockfd, char *jwt_token) {
     // extract the body from the
     char *body = strstr(response, "[{");
     if (body != NULL) {
-        printf("%s\n", body);
+        json books = json::parse(body);
+        for (auto book : books) {
+            cout << "id=" << book["id"] << "; " << "title=" << book["title"]
+                << endl;
+        }
     }
     else {
         printf("We dont have books here.\n");
@@ -166,7 +172,8 @@ void send_add_book_command(int sockfd, char *jwt_token) {
         printf("The book was added to the library.\n");
     } else  {
         // error
-        printf("%s\n", body);
+        json body_json = json::parse(body);
+        cout << body_json["error"] << endl;
     }
     // free the allocated memory
     free(send_json);
@@ -196,7 +203,8 @@ void send_get_book_command(int sockfd, char *jwt_token) {
             << book_information["page_count"] << endl << "publisher="
             << book_information["publisher"] << endl;
     } else {
-        printf("%s\n", body_error);
+        json error = json::parse(body_error);
+        cout << error["error"] << endl;
     }
 }
 
@@ -214,7 +222,8 @@ void send_delete_book_command(int sockfd, char *jwt_token) {
     if (body == NULL) {
         printf("Book deleted.\n");
     } else {
-        printf("%s\n", body);
+        json error = json::parse(body);
+        cout << error["error"] << endl;
     }
 }
 
@@ -229,7 +238,8 @@ void send_logout_command(int sockfd, char *cookie) {
     if (body == NULL) {
         printf("Logged out succesfully! Bye!\n");
     } else {
-        printf("%s\n", body);
+        json error = json::parse(body);
+        cout << error["error"] << endl;
     }
 }
 
@@ -245,6 +255,9 @@ int main(int argc, char *argv[]) {
             error("Stupid socket.\n");
             break;
         }
+        printf("\033[0;31m"); // Set the color red
+        printf(">");
+        printf("\033[0m"); // Reset the color to default
         memset(command, 0, 15);
         fgets(command, 15, stdin);
         // remove \n from the end of the command string 
@@ -293,6 +306,7 @@ int main(int argc, char *argv[]) {
                 printf("You can't logout if you are not logged in. DUH!\n");
             } else {
                 send_logout_command(sockfd, cookie);
+                free(cookie); free(jwt_token);
                 jwt_token = NULL;
                 cookie = NULL;
             }
