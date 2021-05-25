@@ -34,7 +34,7 @@ void send_register_command(int sockfd) {
     body_data[0] = send_json;
     // create the request message
     char *message = compute_post_request(host, url_register, content_type,
-        body_data, 1, NULL, 0, NULL);
+        body_data, 1, NULL);
     send_to_server(sockfd, message);
     // receive the response from the server
     char *response = receive_from_server(sockfd);
@@ -48,6 +48,7 @@ void send_register_command(int sockfd) {
         cout << body_json["error"] << endl;
     }
     // free allocated memory
+    free(message);
     free(send_json);
     free(body_data);
 }
@@ -73,12 +74,13 @@ char* send_login_command(int sockfd) {
     body_data[0] = send_json;
     // create the request message
     char *message = compute_post_request(host, url_login, content_type, 
-        body_data, 1, NULL, 0, NULL);
+        body_data, 1, NULL);
     // send the message to the server
     send_to_server(sockfd, message);
     // receive the response from the server
     char *response = receive_from_server(sockfd);
     char *body = basic_extract_json_response(response);
+    free(message);
     // print succes message or error messaage
     if (body == NULL) {
         free(send_json);
@@ -102,13 +104,14 @@ char* send_login_command(int sockfd) {
 char *send_enter_library_command(int sockfd, char* cookie) {
     const char **cookies = (const char **)calloc(1, sizeof(char *));
     cookies[0] = cookie;
-    char *message = compute_get_request(host, url_access, NULL, 
-        cookies, 1, NULL, "GET");
+    char *message = compute_get_request(host, url_access, cookies,
+        1, NULL, "GET");
     send_to_server(sockfd, message);
     char *response = receive_from_server(sockfd);
     // extract the response from the json
     char *jwt_token_body = basic_extract_json_response(response);
     free(cookies);
+    free(message);
     if (jwt_token_body != NULL) {
         json json_token = json::parse(jwt_token_body);
         if (!json_token["token"].is_null()) {
@@ -128,9 +131,10 @@ char *send_enter_library_command(int sockfd, char* cookie) {
 }
 
 void send_get_books_command(int sockfd, char *jwt_token) {
-    char *message = compute_get_request(host, url_books, NULL, 
-        NULL, 0, jwt_token, "GET");
+    char *message = compute_get_request(host, url_books, NULL,
+        0, jwt_token, "GET");
     send_to_server(sockfd, message);
+    free(message);
     char *response = receive_from_server(sockfd);
     // extract the body from the
     char *body = strstr(response, "[{");
@@ -164,7 +168,7 @@ void send_add_book_command(int sockfd, char *jwt_token) {
     const char **body_data = (const char **)calloc(1, sizeof(char *));
     body_data[0] = send_json;
     char *message = compute_post_request(host, url_books, content_type, 
-        body_data, 1, NULL, 0, jwt_token);
+        body_data, 1, jwt_token);
     send_to_server(sockfd, message);
     char *response = receive_from_server(sockfd);
     char *body = basic_extract_json_response(response);
@@ -178,6 +182,7 @@ void send_add_book_command(int sockfd, char *jwt_token) {
     // free the allocated memory
     free(send_json);
     free(body_data);
+    free(message);
 }
 
 void send_get_book_command(int sockfd, char *jwt_token) {
@@ -186,9 +191,10 @@ void send_get_book_command(int sockfd, char *jwt_token) {
     // create the message to get the book with the given id
     string url_get_book = url_books;
     url_get_book.append("/").append(id);
-    char *message = compute_get_request(host, url_get_book.c_str(), NULL, NULL,
-        0, jwt_token, "GET");
+    char *message = compute_get_request(host, url_get_book.c_str(), NULL, 0,
+        jwt_token, "GET");
     send_to_server(sockfd, message);
+    free(message);
     char *response = receive_from_server(sockfd);
     char *body = strstr(response, "[{");
     char *body_error = basic_extract_json_response(response);
@@ -215,7 +221,8 @@ void send_delete_book_command(int sockfd, char *jwt_token) {
     string url_delete_book = url_books;
     url_delete_book.append("/").append(id);
     char *message = compute_get_request(host, url_delete_book.c_str(), NULL,
-        NULL, 0, jwt_token, "DELETE");
+        0, jwt_token, "DELETE");
+    free(message);
     send_to_server(sockfd, message);
     char *response = receive_from_server(sockfd);
     char *body = basic_extract_json_response(response);
@@ -230,11 +237,12 @@ void send_delete_book_command(int sockfd, char *jwt_token) {
 void send_logout_command(int sockfd, char *cookie) {
     const char **cookies = (const char **)calloc(1, sizeof(char *));
     cookies[0] = cookie;
-    char *message = compute_get_request(host, url_logout, NULL, 
-        cookies, 1, NULL, "GET");
+    char *message = compute_get_request(host, url_logout, cookies,
+        1, NULL, "GET");
     send_to_server(sockfd, message);
     char *receive = receive_from_server(sockfd);
     char *body = basic_extract_json_response(receive);
+    free(message);
     if (body == NULL) {
         printf("Logged out succesfully! Bye!\n");
     } else {
@@ -306,11 +314,28 @@ int main(int argc, char *argv[]) {
                 printf("You can't logout if you are not logged in. DUH!\n");
             } else {
                 send_logout_command(sockfd, cookie);
-                free(cookie); free(jwt_token);
+                if (cookie != NULL) {
+                    free(cookie);
+                }
+                if (jwt_token != NULL) {
+                    // decrement one element to fully free the allocated memory
+                    // for the token
+                    jwt_token--; 
+                    free(jwt_token);
+                }
                 jwt_token = NULL;
                 cookie = NULL;
             }
         } else if (strcmp(command, "exit") == 0) {
+            if (cookie != NULL) {
+                free(cookie);
+            }
+            if (jwt_token != NULL) {
+                // decrement one element to fully free the allocated memory for
+                // the token
+                jwt_token--;
+                free(jwt_token);
+            }
             break;
         } else {
             printf("Wrong command!\n");
