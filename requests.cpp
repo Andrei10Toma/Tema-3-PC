@@ -81,9 +81,9 @@ char *compute_post_request(const char *host, const char *url,
     }
 
     compute_message(message, "");
-    memset(line, 0, LINELEN);
     compute_message(message, body_data_buffer);
 
     free(line);
+    free(body_data_buffer);
     return message;
 }

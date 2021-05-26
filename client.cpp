@@ -222,8 +222,8 @@ void send_delete_book_command(int sockfd, char *jwt_token) {
     url_delete_book.append("/").append(id);
     char *message = compute_get_request(host, url_delete_book.c_str(), NULL,
         0, jwt_token, "DELETE");
-    free(message);
     send_to_server(sockfd, message);
+    free(message);
     char *response = receive_from_server(sockfd);
     char *body = basic_extract_json_response(response);
     if (body == NULL) {
@@ -243,15 +243,17 @@ void send_logout_command(int sockfd, char *cookie) {
     char *receive = receive_from_server(sockfd);
     char *body = basic_extract_json_response(receive);
     free(message);
+    free(cookies);
     if (body == NULL) {
         printf("Logged out succesfully! Bye!\n");
     } else {
         json error = json::parse(body);
         cout << error["error"] << endl;
     }
+    free(receive);
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     char command[15];
     int sockfd;
     char *cookie = NULL, *jwt_token = NULL;

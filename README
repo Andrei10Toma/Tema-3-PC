@@ -1,0 +1,6 @@
+    Toma Andrei 321CB
+
+    The homework was done in C++ and for the parse and use of the jsons I used
+the nlohmann library. Also, the files request.cpp, reques.h, buffer.cpp,
+buffer.h, helpers.cpp and helpers.h are the ones from the laboratory with small
+changes. The implementation will present a command prompt for the user.
