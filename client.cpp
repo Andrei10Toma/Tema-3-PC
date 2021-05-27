@@ -123,6 +123,7 @@ char *send_enter_library_command(int sockfd, char* cookie) {
                 "Here is your token.\n");
             return jwt_token;
         } else {
+            cout << json_token["error"] << endl;
             return NULL;
         }
     } else {

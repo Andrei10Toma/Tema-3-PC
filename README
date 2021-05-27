@@ -3,4 +3,44 @@
     The homework was done in C++ and for the parse and use of the jsons I used
 the nlohmann library. Also, the files request.cpp, reques.h, buffer.cpp,
 buffer.h, helpers.cpp and helpers.h are the ones from the laboratory with small
-changes. The implementation will present a command prompt for the user.
+changes. The implementation will present a command prompt and the program will
+process the input(commands) from the user. I used the nlohmann library because
+I looked through the examples and it seemed easy to understand and to use. Also,
+I used C++ because of the STLS and the strings (easy to read as many characters
+as possible).
+
+    Implementation:
+
+    The client will open a connection for every request and the program will
+interpret the commands from the client and call a specific function for every
+client (send_register_command, send_get_books_command etc.).
+
+    Commands implementation:
+
+    register - a json that contains the username and the password introduced
+by the client will be created (body of the HTTP request). After this, a post
+request message will be computed with the function from the lab and the
+generated message will be sent to the server through the opened socket. Further,
+a response will be received from the server and the body from this repsonse will
+be extracted. If the response has an empty body and a success message will be
+written at standard output ("Welcome to the nerd club!"). Otherwise, if the body
+of the repsonse is not empty the json from the body will be parsed and the
+error message will be written at standard output.
+
+    login - a client won't be able to login to 2 accounts simultaneously. He
+will need to logout from the first account and than login to another one. The
+login HTTP request is similar with the register one. A json is created with the
+username and the password, sent to the server and a response is received from
+the server. If the body of the response is empty then the cookie will be
+extracted from the response and a success message will be shown at standard
+output ("You managed to login! Here is a cookie for you!"). Otherwise, the
+json will be parsed and the error will be printed.
+
+    enter_library - if the client is not logged in he will not be capable to
+enter the library. To enter in the library we will need the cookie from the
+login and with that cookie I will compute a get request and send the message to
+the server. After, I send the message I will receive the message from the server
+that contains the token and I will extract it from the body with the json
+parser. If the json contains the token and not an error a success message
+will be shown at standard output and the token will be returned. Otherwise the
+error received from the server will be printed.
