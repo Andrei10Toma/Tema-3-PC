@@ -18,7 +18,7 @@ client (send_register_command, send_get_books_command etc.).
     Commands implementation:
 
     register - a json that contains the username and the password introduced
-by the client will be created (body of the HTTP request). After this, a post
+by the client will be created (body of the HTTP request). After this, a POST
 request message will be computed with the function from the lab and the
 generated message will be sent to the server through the opened socket. Further,
 a response will be received from the server and the body from this repsonse will
@@ -38,9 +38,48 @@ json will be parsed and the error will be printed.
 
     enter_library - if the client is not logged in he will not be capable to
 enter the library. To enter in the library we will need the cookie from the
-login and with that cookie I will compute a get request and send the message to
+login and with that cookie I will compute a GET request and send the message to
 the server. After, I send the message I will receive the message from the server
-that contains the token and I will extract it from the body with the json
+that contains the jwt token and I will extract it from the body with the json
 parser. If the json contains the token and not an error a success message
 will be shown at standard output and the token will be returned. Otherwise the
 error received from the server will be printed.
+
+    get_books - if the client is not authorized (doesn't have the token) he will
+not be able to get the books from the acoount. Otherwise a get request for the
+books will be sent to the server. I computed a GET request that will contain the
+token provided from the enter_library command. The response from the server will
+be received and if the json received doesn't contain an error I will print the
+summary information about the books.
+
+    get_book - if the client is not authorized (doesn't have the token) he will
+not be able to get the book from the account. Otherwise a GET request for the
+books will be sent to the server. I computed a GET request that will contain
+the token provided form the eneter_library command, and I send to the url that
+contains the id of the book from the user input. If the body of the parsed
+json contains an error the error will be printed, otherwise the information
+about the requested book will be printed.
+
+    add_book - if the client is not authorized (doesn't have the token) he will
+not be able to add a book. Otherwise a POST request will will be computed that
+will contain the information about the book that will be added (title, author,
+genre, page_count, publisher) in a json. The generated message will be sent to
+the server and the client will receive a response from the server. If the body
+has an error it will be printed, othewise a succes message will be printed at
+standard output.
+
+    delete_book - if the client is not authorized (dosen't have the token) he
+will not be able to delete books from the account. Otherwise a DELETE request
+will be computed that contains the url that has the id of the book from the
+user input and the jwt token. The message is sent to the server and the response
+from the server is received. The body if extracted and if it contains an error
+it is shown, othewise a succes message is printed.
+
+    logout - if the client will try to logout it will not be able to logout if
+he is not logged in. Otherwise, a GET request on the url of the logout and with
+the cookie received from the login command will be sent to the server. I will
+receive from the server a response. If the body of the response is empty a
+succes message will be printed, otherwise the error will be printed. The memory
+for the cookie and for the token will be freed.
+
+    exit - the connection is closed and the allocated memory is freed.
