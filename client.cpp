@@ -203,16 +203,15 @@ void send_get_book_command(int sockfd, char *jwt_token) {
         body++;
         memset(body + strlen(body) - 1, 0, 1);
         json book_information = json::parse(body);
-        if (book_information["error"].is_null()) {
-            printf("Informations about the book you asked for:\n");
-            cout << "title=" << book_information["title"] << endl << "author="
-                << book_information["author"] << endl << "genre="
-                << book_information["genre"] << endl << "pages="
-                << book_information["page_count"] << endl << "publisher="
-                << book_information["publisher"] << endl;
-        } else {
-            cout << book_information["error"] << endl;
-        }
+        printf("Informations about the book you asked for:\n");
+        cout << "title=" << book_information["title"] << endl << "author="
+            << book_information["author"] << endl << "genre="
+            << book_information["genre"] << endl << "pages="
+            << book_information["page_count"] << endl << "publisher="
+            << book_information["publisher"] << endl;
+    } else {
+        json error = json::parse(body_error);
+        cout << error["error"] << endl;
     }
 }
 
